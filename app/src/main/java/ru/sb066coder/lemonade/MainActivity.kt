@@ -6,18 +6,29 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ru.sb066coder.lemonade.ui.theme.LemonadeTheme
 
 class MainActivity : ComponentActivity() {
@@ -41,7 +52,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LemonadeApp() {
     var state by remember {
-        mutableStateOf(State(0, State.titles[0], 0))
+        mutableStateOf(State(0))
     }
     Column(
         modifier = Modifier
@@ -56,21 +67,32 @@ fun LemonadeApp() {
                 .clickable { state = state.change() }
                 .background(
                     color = Color(0xFFC5F5D7),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(32.dp)
                 )
                 .height(240.dp)
-                .aspectRatio(1.0f, ),
-            contentDescription = "Lemon tree"
+                .aspectRatio(1.0f),
+            contentDescription = when(state.frame) {
+                1 -> stringResource(R.string.lemon_tree)
+                2 -> stringResource(R.string.lemon)
+                3 -> stringResource(R.string.glass_of_lemonade)
+                else -> stringResource(R.string.empty_glass)
+            }
         )
-        Text(text = state.title)
+        Text(
+            text = when(state.frame) {
+                1 -> stringResource(id = R.string.tap_the_lemon_tree)
+                2 -> stringResource(id = R.string.keep_tapping_the_lemon)
+                3 -> stringResource(id = R.string.tap_the_lemonade)
+                else -> stringResource(id = R.string.tap_the_empty_glass)
+            },
+            fontSize = 18.sp
+        )
     }
 }
 
 
 class State(
-    private val frame: Int,
-    val title: String,
-    private var extraTaps: Int
+    val frame: Int
     ) {
 
     val imageResource = when (frame) {
@@ -79,24 +101,11 @@ class State(
         2 -> R.drawable.lemon_drink
         else -> R.drawable.lemon_restart
     }
+    private var extraTaps = if (frame == 1) (1..3).random() else 0
 
     fun change(): State {
         if (frame == 1 && extraTaps > 0)
             return this.apply { --extraTaps }
-        val nextFrame = (frame + 1) % 4
-        return State(
-            frame = nextFrame,
-            title = titles[nextFrame],
-            extraTaps = if (nextFrame == 1) (1..3).random() else 0
-        )
-    }
-
-    companion object {
-        val titles = listOf(
-            "Tap the lemon tree to select a lemon",
-            "Keep tapping the lemon to squeeze it",
-            "Tap the lemonade to drink it",
-            "Tap the empty glass to start again"
-        )
+        return State((frame + 1) % 4)
     }
 }
